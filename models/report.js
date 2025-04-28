@@ -1,0 +1,17 @@
+import { Schema, model, Types } from "mongoose";
+
+
+
+// Report Schema
+const reportSchema = new Schema(
+  {
+    user: { type: Types.ObjectId, ref: 'User', required: true }, // User submitting the report
+    title: { type: String, required: true },
+    description: { type: String, required: true },
+    evidence: { type: String, required: true }, // Link to evidence (e.g., file path or URL)
+  },
+  { timestamps: true }
+);
+
+// Report Model
+export const reportModel = model('Report', reportSchema);
