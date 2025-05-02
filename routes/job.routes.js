@@ -11,7 +11,7 @@ jobRouter.post("/", authenticateUser, checkRole(["Employer", "Admin"]), createJo
 jobRouter.get("/", getAllJobs);
 jobRouter.patch("/:id", authenticateUser, checkRole(["Employer", "Admin"]), updateJob);
 jobRouter.delete("/:id", authenticateUser, checkRole(["Employer", "Admin"]), deleteJob);
-jobRouter.post("/:jobId/apply", applyToJob);  // This is the route handler for applying to a job
+jobRouter.post("/:jobId/apply",authenticateUser, applyToJob);  // This is the route handler for applying to a job
 
 
 

@@ -2,6 +2,7 @@ import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import authRoutes from "./routes/auth.routes.js";
+import profileRoutes from "./routes/profile.route.js";
 import jobRoutes from "./routes/job.routes.js";
 import dashboardRoutes from "./routes/dashboard.routes.js";
 import consultantRoutes from "./routes/consultant.routes.js";
@@ -16,6 +17,7 @@ app.use(express.json());
 app.use("/uploads", express.static("uploads"));
 
 app.use("/api/auth", authRoutes);
+app.use('/api/profile', profileRoutes);
 app.use("/api/job", jobRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/consult', consultantRoutes);

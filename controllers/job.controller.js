@@ -36,85 +36,120 @@ export const getAllJobs = async (req, res) => {
 };
 
 
-// // Get all jobs with filtering
-// export const getAllJobs = async (req, res) => {
-//   const { jobType, experienceLevel, skills, location } = req.query;
-//   const filter = {};
-
-//   if (jobType) filter.jobType = jobType;
-//   if (experienceLevel) filter.experienceLevel = experienceLevel;
-//   if (location) filter.location = location;
-//   if (skills) filter.skills = { $in: skills.split(",") };
-
-//   const jobs = await jobModel.find(filter);
-//   res.json(jobs);
-// };
 
 // Apply to a job (update applications field)
 export const applyToJob = async (req, res) => {
   try {
-    const job = await jobModel.findById(req.params.jobId);
+    const jobId = req.params.jobId;
+    const resume = req.body.resume;
+    const applicantId = req.user?.id; // ✅ Correct key from req.user
+
+    if (!jobId || !resume) {
+      return res.status(400).json({ message: "Job ID and resume are required." });
+    }
+
+    if (!applicantId) {
+      return res.status(401).json({ message: "Authentication required." });
+    }
+
+    // Optional: ensure job exists
+    const job = await jobModel.findById(jobId);
     if (!job) {
-      return res.status(404).json({ message: "Job not found" });
+      return res.status(404).json({ message: "Job not found." });
     }
 
-    // Check if user is already in job.applications (if storing applicant IDs directly)
-    const alreadyApplied = job.applications.some(
-      appId => appId.toString() === req.user.id
-    );
-
-    if (alreadyApplied) {
-      return res.status(400).json({ message: "Already applied to this job" });
+    // Prevent duplicate applications
+    const existing = await applicationModel.findOne({ jobId, applicantId });
+    if (existing) {
+      return res.status(409).json({ message: "You have already applied to this job." });
     }
 
-    // Create and save new application
-    const newApplication = new applicationModel({
-      jobId: job._id,
-      applicantId: req.user.id,
-      resume: req.body.resume, // make sure this is sent in the request
+    const application = await applicationModel.create({
+      jobId,
+      applicantId,
+      resume
     });
 
-    await newApplication.save();
+    res.status(201).json({
+      message: "Application submitted successfully.",
+      applicationId: application._id,
+      status: application.status
+    });
 
-    // Push application ID into job
-    job.applications.push(newApplication._id);
-    await job.save();
-
-    await sendEmail(
-      req.user.email,
-      "Your Application Has Been Received – Nnoboa HR",
-      `
-      <div style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;">
-        <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; padding: 30px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-          <h2 style="color: #2c3e50;">🎉 Thank You for Applying!</h2>
-          <p style="font-size: 16px; color: #333;">
-            Hello,
-          </p>
-          <p style="font-size: 16px; color: #333;">
-            We have received your application for the position of <strong>${job.title}</strong> on the Nnoboa HR Platform.
-          </p>
-          <p style="font-size: 16px; color: #333;">
-            Our team will review your application shortly. If you're shortlisted, we’ll reach out to you for the next steps.
-          </p>
-          <div style="margin: 30px 0; text-align: center;">
-            <a href="https://your-platform.com/dashboard" style="background-color: #2ecc71; color: white; padding: 12px 25px; border-radius: 5px; text-decoration: none; font-weight: bold;">Go to Dashboard</a>
-          </div>
-          <p style="font-size: 14px; color: #999;">
-            Best regards,<br>
-            The Nnoboa HR Team
-          </p>
-        </div>
-      </div>
-      `
-    );
-    
-
-    res.status(200).json({ message: "Application submitted successfully", application: newApplication });
   } catch (err) {
     console.error("Error applying to job:", err);
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ message: "Application failed", error: err.message });
   }
 };
+
+
+
+
+
+// export const applyToJob = async (req, res) => {
+//   try {
+//     const job = await jobModel.findById(req.params.jobId);
+//     if (!job) {
+//       return res.status(404).json({ message: "Job not found" });
+//     }
+
+//     // Check if user is already in job.applications (if storing applicant IDs directly)
+//     const alreadyApplied = job.applications.some(
+//       appId => appId.toString() === req.user.id
+//     );
+
+//     if (alreadyApplied) {
+//       return res.status(400).json({ message: "Already applied to this job" });
+//     }
+
+//     // Create and save new application
+//     const newApplication = new applicationModel({
+//       jobId: job._id,
+//       applicantId: req.user.id,
+//       resume: req.body.resume, // make sure this is sent in the request
+//     });
+
+//     await newApplication.save();
+
+//     // Push application ID into job
+//     job.applications.push(newApplication._id);
+//     await job.save();
+
+//     await sendEmail(
+//       req.user.email,
+//       "Your Application Has Been Received – Nnoboa HR",
+//       `
+//       <div style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;">
+//         <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; padding: 30px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+//           <h2 style="color: #2c3e50;">🎉 Thank You for Applying!</h2>
+//           <p style="font-size: 16px; color: #333;">
+//             Hello,
+//           </p>
+//           <p style="font-size: 16px; color: #333;">
+//             We have received your application for the position of <strong>${job.title}</strong> on the Nnoboa HR Platform.
+//           </p>
+//           <p style="font-size: 16px; color: #333;">
+//             Our team will review your application shortly. If you're shortlisted, we’ll reach out to you for the next steps.
+//           </p>
+//           <div style="margin: 30px 0; text-align: center;">
+//             <a href="https://your-platform.com/dashboard" style="background-color: #2ecc71; color: white; padding: 12px 25px; border-radius: 5px; text-decoration: none; font-weight: bold;">Go to Dashboard</a>
+//           </div>
+//           <p style="font-size: 14px; color: #999;">
+//             Best regards,<br>
+//             The Nnoboa HR Team
+//           </p>
+//         </div>
+//       </div>
+//       `
+//     );
+    
+
+//     res.status(200).json({ message: "Application submitted successfully", application: newApplication });
+//   } catch (err) {
+//     console.error("Error applying to job:", err);
+//     res.status(500).json({ message: err.message });
+//   }
+// };
 
 
 // export const applyToJob = async (req, res) => {
@@ -171,7 +206,7 @@ export const createJob = async (req, res) => {
     skillsRequired,
     jobType,
     experienceLevel,
-    employerId: req.user._id, // Current authenticated user is the employer
+    employerId: req.user.id, // Current authenticated user is the employer
   });
 
   try {

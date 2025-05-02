@@ -4,9 +4,11 @@ import { Schema, model } from "mongoose";
 // Consultant Schema
 const consultantSchema = new Schema(
   {
-    name: { type: String, required: true },
+    fullname: { type: String, required: true },
     email: { type: String, required: true, unique: true },
-    expertise: { type: [String], required: true }, // Areas of expertise
+    professionalTitle:{ type: String, required: true},    
+    yearsOfExperience:{ type: String, required: true},    
+    industry: { type: String, required: true }, // industry or specialization
   },
   { timestamps: true }
 );

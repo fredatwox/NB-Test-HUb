@@ -33,7 +33,7 @@ export const getEmployerDashboard = async (req, res) => {
     
     
     // Fetch jobs created by this employer
-    const jobs = await jobModel.find({ employerId: employerId });
+    const jobs = await jobModel.find({ employerId: employerId }).sort({createdAt: -1}).lean();
     
   
     
@@ -52,12 +52,21 @@ export const getEmployerDashboard = async (req, res) => {
     // Fetch applications for those jobs, populate job title
     const applications = await applicationModel
       .find({ jobId: { $in: jobIds } })
-      .populate("jobId", "title");
+      .populate("jobId", "title")
+      .sort({ createdAt: -1})
+      .lean();
+
+
+        // Optional: Filter applications to ensure they belong to the employer
+    const validApplications = applications.filter(app => 
+      app.jobId?.employerId?.toString() === employerId.toString()
+    );
       
 
     res.json({
       jobs,
       applications,
+      message: "Dashboard data fetched successfully.",
     });
 
   } catch (err) {

@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import { userModel } from "../models/User.js";
 import {sendEmail} from "../utils/sendEmail.js";
+import { UserProfile } from "../models/userProfile.js";
 import bcrypt from "bcrypt";
 
 
@@ -45,11 +46,9 @@ export const login = async (req, res) => {
     if (!user) {
       return res.status(400).json({ message: 'User not found' });
     }
-     
-      
+
     // 2. Compare password
     const isMatch = await bcrypt.compare(password, user.password);
-    
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
@@ -58,19 +57,29 @@ export const login = async (req, res) => {
     const token = jwt.sign(
       { userId: user._id, email: user.email, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: "1d" }
+      { expiresIn: '1d' }
     );
 
-    // 4. Respond
+    // 4. Check if profile exists; if not, create one
+    const existingProfile = await UserProfile.findOne({ userId: user._id });
+    if (!existingProfile) {
+      await UserProfile.create({
+        userId: user._id,
+        email: user.email,
+        // You can populate other fields as needed
+      });
+    }
+
+    // 5. Respond
     res.status(200).json({
-      message: "Login successful",
+      message: 'Login successful',
       token,
       user: {
         id: user._id,
         fullname: user.fullname,
         email: user.email,
-        role: user.role
-      }
+        role: user.role,
+      },
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
