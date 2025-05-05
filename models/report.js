@@ -10,7 +10,7 @@ const reportSchema = new Schema(
     email: { type: String, required: true },
     phone: { type: Number, required: true },
     location: { type: String, required: true },
-    type: { type: String ,  enum: ['Child Labor', 'Physical Abuse', 'Emotional Abuse', 'Sexual Abuse', 'Neglect',, 'Other'], required: true },
+    type: { type: String ,  enum: ['Child Labor', 'Physical Abuse', 'Emotional Abuse', 'Sexual Abuse', 'Neglect', 'Other'], required: true },
     date: { type: String, required: true },
     description: { type: String, required: true },
     evidence: { type: String, required: true }, // Link to evidence (e.g., file path or URL)
