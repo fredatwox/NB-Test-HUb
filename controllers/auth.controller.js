@@ -69,6 +69,7 @@ export const login = async (req, res) => {
       await UserProfile.create({
         userId: user._id,
         email: user.email,
+      
         // You can populate other fields as needed
       });
     }
