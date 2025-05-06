@@ -37,6 +37,8 @@ export const signup = async (req, res) => {
 };
 
 
+
+
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -47,12 +49,9 @@ export const login = async (req, res) => {
       return res.status(400).json({ message: 'User not found' });
     }
 
-
-    console.log("User found:", user.email);
-    console.log("Stored hash:", user.password);
-
     // 2. Compare password
     const isMatch = await bcrypt.compare(password, user.password);
+
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
